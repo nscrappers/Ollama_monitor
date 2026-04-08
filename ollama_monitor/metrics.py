@@ -1,0 +1,72 @@
+"""Metrics collection module for Ollama Monitor.
+
+Collects and exposes runtime metrics from a running Ollama instance.
+"""
+
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass, field
+from typing import Optional
+
+import httpx
+
+OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434"
+
+
+@dataclass
+class OllamaMetrics:
+    """Snapshot of Ollama instance metrics."""
+
+    timestamp: float = field(default_factory=time.time)
+    is_reachable: bool = False
+    loaded_models: list[str] = field(default_factory=list)
+    model_count: int = 0
+    response_time_ms: Optional[float] = None
+
+
+def fetch_metrics(
+    base_url: str = OLLAMA_DEFAULT_BASE_URL,
+    timeout: float = 5.0,
+) -> OllamaMetrics:
+    """Fetch current metrics from the Ollama API.
+
+    Args:
+        base_url: Base URL of the Ollama instance.
+        timeout: HTTP request timeout in seconds.
+
+    Returns:
+        An :class:`OllamaMetrics` snapshot.
+    """
+    metrics = OllamaMetrics()
+
+    try:
+        start = time.perf_counter()
+        response = httpx.get(f"{base_url}/api/tags", timeout=timeout)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+
+        response.raise_for_status()
+        data = response.json()
+
+        metrics.is_reachable = True
+        metrics.response_time_ms = round(elapsed_ms, 2)
+        metrics.loaded_models = [
+            model["name"] for model in data.get("models", [])
+        ]
+        metrics.model_count = len(metrics.loaded_models)
+
+    except (httpx.HTTPError, httpx.TimeoutException, KeyError):
+        metrics.is_reachable = False
+
+    return metrics
+
+
+def format_metrics(metrics: OllamaMetrics) -> str:
+    """Return a human-readable summary of the given metrics snapshot."""
+    lines = [
+        f"Timestamp        : {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(metrics.timestamp))}",
+        f"Reachable        : {metrics.is_reachable}",
+        f"Response time    : {metrics.response_time_ms} ms" if metrics.response_time_ms is not None else "Response time    : N/A",
+        f"Loaded models ({metrics.model_count}): {', '.join(metrics.loaded_models) or 'none'}",
+    ]
+    return "\n".join(lines)
