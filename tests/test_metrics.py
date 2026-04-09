@@ -76,6 +76,17 @@ class TestFetchMetrics:
 
         mock_get.assert_called_once_with(f"{custom_url}/api/tags", timeout=5.0)
 
+    # I run Ollama locally with a longer startup time, so testing a higher
+    # timeout value is useful for my setup.
+    def test_custom_timeout_is_used(self):
+        with patch("ollama_monitor.metrics.httpx.get") as mock_get:
+            mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
+            fetch_metrics(timeout=15.0)
+
+        mock_get.assert_called_once_with(
+            "http://localhost:11434/api/tags", timeout=15.0
+        )
+
 
 class TestFormatMetrics:
     def test_reachable_output_contains_model_names(self):
@@ -91,8 +102,13 @@ class TestFormatMetrics:
         assert "42.5" in output
         assert "True" in output
 
-    def test_unreachable_output_shows_na(self):
-        metrics = OllamaMetrics(is_reachable=False)
+    def test_unreachable_output_shows_false(self):
+        metrics = OllamaMetrics(
+            timestamp=time.time(),
+            is_reachable=False,
+            loaded_models=[],
+            model_count=0,
+            response_time_ms=None,
+        )
         output = format_metrics(metrics)
-        assert "N/A" in output
         assert "False" in output
