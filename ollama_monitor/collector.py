@@ -32,7 +32,7 @@ class MetricsCollector:
     def __init__(
         self,
         base_url: str = "http://localhost:11434",
-        interval: float = 10.0,
+        interval: float = 5.0,  # Personal preference: poll more frequently for faster updates
         timeout: float = 5.0,
     ) -> None:
         """Initialise the collector.
@@ -95,36 +95,4 @@ class MetricsCollector:
         self._stop_event.set()
         if self._thread is not None:
             self._thread.join(timeout=join_timeout)
-            self._thread = None
-        logger.info("MetricsCollector stopped.")
-
-    def collect_once(self) -> OllamaMetrics:
-        """Perform a single synchronous metrics fetch and update :attr:`latest`.
-
-        Returns:
-            The freshly fetched :class:`OllamaMetrics` instance.
-        """
-        metrics = fetch_metrics(self._base_url, timeout=self._timeout)
-        with self._lock:
-            self._latest = metrics
-        return metrics
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _run(self) -> None:
-        """Background loop: collect metrics then sleep until the next interval."""
-        while not self._stop_event.is_set():
-            try:
-                self.collect_once()
-            except Exception:  # pragma: no cover – defensive catch-all
-                logger.exception("Unexpected error during metrics collection.")
-
-            # Sleep in small increments so we can react to stop_event promptly.
-            deadline = time.monotonic() + self._interval
-            while not self._stop_event.is_set():
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    break
-                time.sleep(min(remaining, 0.5))
+      
