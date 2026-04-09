@@ -33,7 +33,7 @@ class MetricsCollector:
         self,
         base_url: str = "http://localhost:11434",
         interval: float = 5.0,  # Personal preference: poll more frequently for faster updates
-        timeout: float = 5.0,
+        timeout: float = 10.0,  # Increased from 5.0 — my local Ollama instance can be slow to respond
     ) -> None:
         """Initialise the collector.
 
@@ -93,6 +93,6 @@ class MetricsCollector:
             join_timeout: Maximum seconds to wait for the thread to exit.
         """
         self._stop_event.set()
-        if self._thread is not None:
+        if self._thread is not None and self._thread.is_alive():
             self._thread.join(timeout=join_timeout)
-      
+        logger.info("MetricsCollector stopped.")
