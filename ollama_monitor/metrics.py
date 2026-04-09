@@ -27,7 +27,7 @@ class OllamaMetrics:
 
 def fetch_metrics(
     base_url: str = OLLAMA_DEFAULT_BASE_URL,
-    timeout: float = 5.0,
+    timeout: float = 10.0,  # Increased from 5.0 for slower networks
 ) -> OllamaMetrics:
     """Fetch current metrics from the Ollama API.
 
