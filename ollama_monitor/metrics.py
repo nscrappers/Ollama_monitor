@@ -67,6 +67,6 @@ def format_metrics(metrics: OllamaMetrics) -> str:
         f"Timestamp        : {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(metrics.timestamp))}",
         f"Reachable        : {metrics.is_reachable}",
         f"Response time    : {metrics.response_time_ms} ms" if metrics.response_time_ms is not None else "Response time    : N/A",
-        f"Loaded models ({metrics.model_count}): {', '.join(metrics.loaded_models) or 'none'}",
+        f"Loaded models ({metrics.model_count}): {', '.join(sorted(metrics.loaded_models)) or 'none'}",  # sort for consistent output
     ]
     return "\n".join(lines)
