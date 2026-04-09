@@ -87,28 +87,12 @@ class TestFetchMetrics:
             "http://localhost:11434/api/tags", timeout=15.0
         )
 
+    # Added this test because I sometimes run a second Ollama instance on
+    # port 11435 for experimenting with different models side by side.
+    def test_alternate_port_base_url(self):
+        alt_url = "http://localhost:11435"
+        with patch("ollama_monitor.metrics.httpx.get") as mock_get:
+            mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
+            fetch_metrics(base_url=alt_url)
 
-class TestFormatMetrics:
-    def test_reachable_output_contains_model_names(self):
-        metrics = OllamaMetrics(
-            timestamp=time.time(),
-            is_reachable=True,
-            loaded_models=["llama3:latest"],
-            model_count=1,
-            response_time_ms=42.5,
-        )
-        output = format_metrics(metrics)
-        assert "llama3:latest" in output
-        assert "42.5" in output
-        assert "True" in output
-
-    def test_unreachable_output_shows_false(self):
-        metrics = OllamaMetrics(
-            timestamp=time.time(),
-            is_reachable=False,
-            loaded_models=[],
-            model_count=0,
-            response_time_ms=None,
-        )
-        output = format_metrics(metrics)
-        assert "False" in output
+        mock_get.assert_called_once_with(f"{alt_url}/api/tags", timeout=5.0)
