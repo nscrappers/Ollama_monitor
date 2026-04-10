@@ -63,7 +63,10 @@ def fetch_metrics(
 
 def format_metrics(metrics: OllamaMetrics) -> str:
     """Return a human-readable summary of the given metrics snapshot."""
+    # Use a separator line to make individual snapshots easier to distinguish
+    separator = "-" * 45
     lines = [
+        separator,
         f"Timestamp        : {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(metrics.timestamp))}",
         f"Reachable        : {metrics.is_reachable}",
         f"Response time    : {metrics.response_time_ms} ms" if metrics.response_time_ms is not None else "Response time    : N/A",
