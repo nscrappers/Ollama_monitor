@@ -87,13 +87,14 @@ class TestFetchMetrics:
             "http://localhost:11434/api/tags", timeout=15.0
         )
 
-    # My machine sometimes takes a moment to respond even when Ollama is
-    # running, so I added this test to make sure response_time_ms is
-    # actually measured and not just set to 0 unconditionally.
-    def test_response_time_ms_is_positive_on_success(self):
+    # My machine sometimes has transient connection resets that aren't true
+    # timeouts, so I want to make sure ConnectError is also treated as
+    # unreachable rather than propagating as an unhandled exception.
+    def test_connect_error_returns_unreachable_metrics(self):
         with patch("ollama_monitor.metrics.httpx.get") as mock_get:
-            mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
+            mock_get.side_effect = httpx.ConnectError("connection reset by peer")
             metrics = fetch_metrics()
 
-        assert metrics.response_time_ms is not None
-        assert metrics.response_time_ms > 0
+        assert metrics.is_reachable is False
+        assert metrics.model_count == 0
+        assert metrics.response_time_ms is None
