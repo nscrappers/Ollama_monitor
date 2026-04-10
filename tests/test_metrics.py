@@ -87,12 +87,12 @@ class TestFetchMetrics:
             "http://localhost:11434/api/tags", timeout=15.0
         )
 
-    # Added this test because I sometimes run a second Ollama instance on
-    # port 11435 for experimenting with different models side by side.
-    def test_alternate_port_base_url(self):
-        alt_url = "http://localhost:11435"
+    # My machine sometimes has Ollama running on a non-standard port (11435)
+    # when I'm testing changes to Ollama itself alongside this monitor.
+    def test_custom_base_url_with_nonstandard_port(self):
+        custom_url = "http://localhost:11435"
         with patch("ollama_monitor.metrics.httpx.get") as mock_get:
             mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
-            fetch_metrics(base_url=alt_url)
+            fetch_metrics(base_url=custom_url)
 
-        mock_get.assert_called_once_with(f"{alt_url}/api/tags", timeout=5.0)
+        mock_get.assert_called_once_with(f"{custom_url}/api/tags", timeout=5.0)
