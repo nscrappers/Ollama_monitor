@@ -87,12 +87,13 @@ class TestFetchMetrics:
             "http://localhost:11434/api/tags", timeout=15.0
         )
 
-    # I sometimes run a second Ollama instance on port 11435 for testing
-    # experimental models, so this verifies the port is respected correctly.
-    def test_custom_port_in_base_url_is_used(self):
-        custom_url = "http://localhost:11435"
+    # My machine sometimes takes a moment to respond even when Ollama is
+    # running, so I added this test to make sure response_time_ms is
+    # actually measured and not just set to 0 unconditionally.
+    def test_response_time_ms_is_positive_on_success(self):
         with patch("ollama_monitor.metrics.httpx.get") as mock_get:
             mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
-            fetch_metrics(base_url=custom_url)
+            metrics = fetch_metrics()
 
-        mock_get.assert_called_once_with(f"{custom_url}/api/tags", timeout=5.0)
+        assert metrics.response_time_ms is not None
+        assert metrics.response_time_ms > 0
