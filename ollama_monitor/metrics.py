@@ -69,4 +69,7 @@ def format_metrics(metrics: OllamaMetrics) -> str:
         f"Response time    : {metrics.response_time_ms} ms" if metrics.response_time_ms is not None else "Response time    : N/A",
         f"Loaded models ({metrics.model_count}): {', '.join(sorted(metrics.loaded_models)) or 'none'}",  # sort for consistent output
     ]
+    # Add a blank line at the end to make it easier to read when printing
+    # multiple snapshots back-to-back in the terminal.
+    lines.append("")
     return "\n".join(lines)
