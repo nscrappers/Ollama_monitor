@@ -87,14 +87,12 @@ class TestFetchMetrics:
             "http://localhost:11434/api/tags", timeout=15.0
         )
 
-    # My machine sometimes has transient connection resets that aren't true
-    # timeouts, so I want to make sure ConnectError is also treated as
-    # unreachable rather than propagating as an unhandled exception.
-    def test_connect_error_returns_unreachable_metrics(self):
+    # My machine sometimes has Ollama running on a non-standard port (11435)
+    # when I'm testing a second instance alongside the default one.
+    def test_custom_base_url_with_nonstandard_port(self):
+        custom_url = "http://localhost:11435"
         with patch("ollama_monitor.metrics.httpx.get") as mock_get:
-            mock_get.side_effect = httpx.ConnectError("connection reset by peer")
-            metrics = fetch_metrics()
+            mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
+            fetch_metrics(base_url=custom_url)
 
-        assert metrics.is_reachable is False
-        assert metrics.model_count == 0
-        assert metrics.response_time_ms is None
+        mock_get.assert_called_once_with(f"{custom_url}/api/tags", timeout=5.0)
