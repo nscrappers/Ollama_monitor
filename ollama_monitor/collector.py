@@ -86,13 +86,11 @@ class MetricsCollector:
             self._interval,
         )
 
-    def stop(self, join_timeout: float = 5.0) -> None:
+    def stop(self, join_timeout: float = 10.0) -> None:
         """Signal the background thread to stop and wait for it to finish.
 
         Args:
             join_timeout: Maximum seconds to wait for the thread to exit.
+                          Increased to 10.0 to give the thread enough time to
+                          finish an in-flight request before we give up.
         """
-        self._stop_event.set()
-        if self._thread is not None and self._thread.is_alive():
-            self._thread.join(timeout=join_timeout)
-        logger.info("MetricsCollector stopped.")
