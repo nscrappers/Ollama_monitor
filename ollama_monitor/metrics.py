@@ -65,11 +65,18 @@ def format_metrics(metrics: OllamaMetrics) -> str:
     """Return a human-readable summary of the given metrics snapshot."""
     # Use a separator line to make individual snapshots easier to distinguish
     separator = "-" * 45
+    # Highlight slow responses (>500ms) so they stand out in the terminal
+    if metrics.response_time_ms is not None and metrics.response_time_ms > 500:
+        response_time_str = f"Response time    : {metrics.response_time_ms} ms  *** SLOW ***"
+    elif metrics.response_time_ms is not None:
+        response_time_str = f"Response time    : {metrics.response_time_ms} ms"
+    else:
+        response_time_str = "Response time    : N/A"
     lines = [
         separator,
         f"Timestamp        : {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(metrics.timestamp))}",
         f"Reachable        : {metrics.is_reachable}",
-        f"Response time    : {metrics.response_time_ms} ms" if metrics.response_time_ms is not None else "Response time    : N/A",
+        response_time_str,
         f"Loaded models ({metrics.model_count}): {', '.join(sorted(metrics.loaded_models)) or 'none'}",  # sort for consistent output
     ]
     # Add a blank line at the end to make it easier to read when printing
