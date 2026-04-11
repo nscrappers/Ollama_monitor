@@ -98,7 +98,7 @@ class MetricsCollector:
             return
 
         self._stop_event.set()
-        # Only join if a positive timeout was requested
+        # Only join if a positive timeout is given — handy during testing
         if join_timeout > 0:
             self._thread.join(timeout=join_timeout)
             if self._thread.is_alive():
@@ -106,4 +106,5 @@ class MetricsCollector:
                     "MetricsCollector thread did not exit within %.1fs",
                     join_timeout,
                 )
+        self._thread = None
         logger.info("MetricsCollector stopped.")
