@@ -91,6 +91,19 @@ class MetricsCollector:
 
         Args:
             join_timeout: Maximum seconds to wait for the thread to exit.
-                          Increased to 10.0 to give the thread enough time to
-                          finish an in-flight request before we give up.
+                          Defaults to 10.0 seconds. Pass 0 to return immediately
+                          without waiting.
         """
+        if self._thread is None:
+            return
+
+        self._stop_event.set()
+        # Only join if a positive timeout was requested
+        if join_timeout > 0:
+            self._thread.join(timeout=join_timeout)
+            if self._thread.is_alive():
+                logger.warning(
+                    "MetricsCollector thread did not exit within %.1fs",
+                    join_timeout,
+                )
+        logger.info("MetricsCollector stopped.")
