@@ -13,6 +13,9 @@ import httpx
 
 OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434"
 
+# I run Ollama on a non-standard port locally
+OLLAMA_DEFAULT_SLOW_THRESHOLD_MS = 300  # flag responses slower than 300ms as slow
+
 
 @dataclass
 class OllamaMetrics:
@@ -65,8 +68,10 @@ def format_metrics(metrics: OllamaMetrics) -> str:
     """Return a human-readable summary of the given metrics snapshot."""
     # Use a separator line to make individual snapshots easier to distinguish
     separator = "-" * 45
-    # Highlight slow responses (>500ms) so they stand out in the terminal
-    if metrics.response_time_ms is not None and metrics.response_time_ms > 500:
+    # Highlight slow responses so they stand out in the terminal.
+    # Using a lower threshold (300ms) than the original 500ms since my machine
+    # is reasonably fast and I want to catch degradation earlier.
+    if metrics.response_time_ms is not None and metrics.response_time_ms > OLLAMA_DEFAULT_SLOW_THRESHOLD_MS:
         response_time_str = f"Response time    : {metrics.response_time_ms} ms  *** SLOW ***"
     elif metrics.response_time_ms is not None:
         response_time_str = f"Response time    : {metrics.response_time_ms} ms"
