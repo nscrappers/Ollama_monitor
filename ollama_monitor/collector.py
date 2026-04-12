@@ -50,6 +50,9 @@ class MetricsCollector:
         self._lock = threading.Lock()
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
+        # Track consecutive fetch failures so we can log a warning after a threshold
+        self._consecutive_failures: int = 0
+        self._failure_warn_threshold: int = 3  # warn after 3 missed polls in a row
 
     # ------------------------------------------------------------------
     # Public interface
@@ -91,20 +94,4 @@ class MetricsCollector:
 
         Args:
             join_timeout: Maximum seconds to wait for the thread to exit.
-                          Defaults to 10.0 seconds. Pass 0 to return immediately
-                          without waiting.
-        """
-        if self._thread is None:
-            return
-
-        self._stop_event.set()
-        # Only join if a positive timeout is given — handy during testing
-        if join_timeout > 0:
-            self._thread.join(timeout=join_timeout)
-            if self._thread.is_alive():
-                logger.warning(
-                    "MetricsCollector thread did not exit within %.1fs",
-                    join_timeout,
-                )
-        self._thread = None
-        logger.info("MetricsCollector stopped.")
+ 
