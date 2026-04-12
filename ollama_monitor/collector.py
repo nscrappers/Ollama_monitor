@@ -52,7 +52,8 @@ class MetricsCollector:
         self._thread: Optional[threading.Thread] = None
         # Track consecutive fetch failures so we can log a warning after a threshold
         self._consecutive_failures: int = 0
-        self._failure_warn_threshold: int = 3  # warn after 3 missed polls in a row
+        # Bumped from 3 to 5 — my machine is flaky on startup so 3 was too noisy
+        self._failure_warn_threshold: int = 5
 
     # ------------------------------------------------------------------
     # Public interface
@@ -89,9 +90,4 @@ class MetricsCollector:
             self._interval,
         )
 
-    def stop(self, join_timeout: float = 10.0) -> None:
-        """Signal the background thread to stop and wait for it to finish.
-
-        Args:
-            join_timeout: Maximum seconds to wait for the thread to exit.
- 
+    def 
