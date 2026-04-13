@@ -54,6 +54,8 @@ class MetricsCollector:
         self._consecutive_failures: int = 0
         # Bumped from 3 to 5 — my machine is flaky on startup so 3 was too noisy
         self._failure_warn_threshold: int = 5
+        # Keep a running count of total successful fetches for basic diagnostics
+        self._total_successes: int = 0
 
     # ------------------------------------------------------------------
     # Public interface
@@ -67,6 +69,12 @@ class MetricsCollector:
         """
         with self._lock:
             return self._latest
+
+    @property
+    def total_successes(self) -> int:
+        """Return the total number of successful metric fetches since start."""
+        with self._lock:
+            return self._total_successes
 
     def start(self) -> None:
         """Start the background collection thread.
@@ -87,7 +95,3 @@ class MetricsCollector:
         logger.info(
             "MetricsCollector started (url=%s, interval=%.1fs)",
             self._base_url,
-            self._interval,
-        )
-
-    def 
