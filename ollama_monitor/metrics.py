@@ -84,6 +84,6 @@ def format_metrics(metrics: OllamaMetrics) -> str:
         response_time_str,
         f"Loaded models ({metrics.model_count}): {', '.join(sorted(metrics.loaded_models)) or 'none'}",  # sort for consistent output
     ]
-    # Add a blank line after the separator block for readability in long log sessions
+    # Add a blank line after the separator block for readability in long log output
     lines.append("")
     return "\n".join(lines)
