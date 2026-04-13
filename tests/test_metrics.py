@@ -87,14 +87,12 @@ class TestFetchMetrics:
             "http://localhost:11434/api/tags", timeout=15.0
         )
 
-    # My machine sometimes has transient network blips, so I added this test
-    # to make sure a generic RequestError (not just TimeoutException) is also
-    # handled gracefully and returns an unreachable result.
-    def test_request_error_returns_unreachable_metrics(self):
+    # I often run a second Ollama instance on port 11435 for testing model
+    # changes without affecting my main instance, so this covers that case.
+    def test_alternate_local_port(self):
+        alt_url = "http://localhost:11435"
         with patch("ollama_monitor.metrics.httpx.get") as mock_get:
-            mock_get.side_effect = httpx.RequestError("network blip")
-            metrics = fetch_metrics()
+            mock_get.return_value = _mock_response(_FAKE_TAGS_RESPONSE)
+            fetch_metrics(base_url=alt_url)
 
-        assert metrics.is_reachable is False
-        assert metrics.model_count == 0
-        assert metrics.response_time_ms is None
+        mock_get.assert_called_once_with(f"{alt_url}/api/tags", timeout=5.0)
